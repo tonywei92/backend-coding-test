@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "nyc mocha -r ts-node/register tests/**/*.test.ts --timeout=1000",
-    "start": "node index.js",
+    "start": "tsc && node dist/index.js",
     "docs": "docsify serve docs"
   },
   "husky": {
