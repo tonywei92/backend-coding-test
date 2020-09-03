@@ -1,6 +1,8 @@
 import express, { Express, Request, NextFunction } from 'express';
 import bodyParser from 'body-parser';
+import morgan from 'morgan';
 import { Database } from 'sqlite3';
+import { loggerStream } from './logger';
 import errorHandlerMiddleware from './middlewares/errorHandler';
 import createResponseMiddleware, {
   ResponseObj,
@@ -10,6 +12,7 @@ import HttpException from './exceptions/HttpException';
 
 const appRouter = (db: Database): Express => {
   const app = express();
+  app.use(morgan('combined', { stream: loggerStream }));
   app.use(createResponseMiddleware);
   const jsonParser = bodyParser.json();
   app.get('/health', (req, res) => res.send('Healthy'));
