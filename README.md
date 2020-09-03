@@ -7,6 +7,7 @@
 </h1>
 <p align="center">
 <img src="https://img.shields.io/badge/Node-%3E8.6%20and%20%3C%3D%2010-yellow"/>
+<img src="https://travis-ci.com/tonywei92/backend-coding-test.svg?branch=master">
 </p>
 <p>This repository contains the RidesAPI source code. Rides API is a API service to manage online-rides service records. Powerful and secure to use.</p>
 
@@ -34,9 +35,11 @@ $ npm start
 | GET    | /rides/:id | Get ride record based on ID |
 
 ## Documentation
+
 You can read full [documentation here](docs/README.md)
 
 Or you can start the documentation server:
+
 ```sh
 $ npm run docs
 ```
