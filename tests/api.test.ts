@@ -16,7 +16,7 @@ const db = new sqlite3.Database(':memory:');
 
 const dbError = {
   run: (a: string, b: any[], cb: (err: Error) => void) => {
-    cb(new Error());
+    cb(new Error('error'));
   },
   all: (a: string, cb: (err: Error) => void) => {
     cb(new Error('error'));
@@ -99,6 +99,15 @@ describe('API tests', () => {
 
   describe('GET /rides', () => {
     it('should return first 10 ride records (page 1)', (done) => {
+      const { data, message, status } = ridesMock;
+      const response: ResponseShape = {
+        data: data.slice(0, 10),
+        message,
+        status,
+        itemsCount: 100,
+        lastPage: 10,
+        page: 1,
+      };
       request(app)
         .get('/rides')
         .expect('Content-Type', /json/)
@@ -108,7 +117,65 @@ describe('API tests', () => {
             ride.created = '2020-01-01 00:00:00';
           });
         })
-        .expect(200, ridesMock, done);
+        .expect(200, response, done);
+    });
+
+    it('should return 10 ride records on page 5', (done) => {
+      const page = 5;
+      const { data, message, status } = ridesMock;
+      const response: ResponseShape = {
+        data: data.slice((page - 1) * 10, (page - 1) * 10 + 10),
+        message,
+        status,
+        itemsCount: 100,
+        lastPage: 10,
+        page,
+      };
+      request(app)
+        .get(`/rides/?page=${page}`)
+        .expect('Content-Type', /json/)
+        .expect(function cb(res) {
+          res.body.data.forEach((ride: Ride) => {
+            ride.rideID = 1;
+            ride.created = '2020-01-01 00:00:00';
+          });
+        })
+        .expect(200, response, done);
+    });
+
+    it('should return empty ride records on page 999999 (no records at this page)', (done) => {
+      const page = 999999;
+      const { message, status } = ridesMock;
+      const response: ResponseShape = {
+        data: [],
+        message,
+        status,
+        itemsCount: 100,
+        lastPage: 10,
+        page,
+      };
+      request(app)
+        .get(`/rides/?page=${page}`)
+        .expect('Content-Type', /json/)
+        .expect(function cb(res) {
+          res.body.data.forEach((ride: Ride) => {
+            ride.rideID = 1;
+            ride.created = '2020-01-01 00:00:00';
+          });
+        })
+        .expect(200, response, done);
+    });
+
+    it('should return error 500 on db error', (done) => {
+      request(appError).get('/rides').expect('Content-Type', /json/).expect(
+        500,
+        {
+          message: 'error',
+          status: 'error',
+          data: null,
+        },
+        done
+      );
     });
   });
 
@@ -265,7 +332,7 @@ describe('API tests', () => {
         .expect(
           500,
           {
-            message: 'Unknown error',
+            message: 'error',
             status: 'error',
             data: null,
           },
@@ -312,7 +379,7 @@ describe('API tests', () => {
         .expect(
           500,
           {
-            message: 'Unknown error',
+            message: 'error',
             status: 'error',
             data: null,
           },
