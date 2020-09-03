@@ -6,6 +6,7 @@ export type ResponseShape = {
   status: string;
   data: any;
   message: string;
+  [k: string]: any;
 };
 
 export interface ResponseObj extends Response {
