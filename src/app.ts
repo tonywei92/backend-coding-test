@@ -1,11 +1,11 @@
-import express from 'express';
+import express, { Express } from 'express';
 import bodyParser from 'body-parser';
 import { Database } from 'sqlite3';
 
 const app = express();
 const jsonParser = bodyParser.json();
 
-module.exports = (db: Database) => {
+const appRouter = (db: Database): Express => {
   app.get('/health', (req, res) => res.send('Healthy'));
 
   app.post('/rides', jsonParser, (req, res) => {
@@ -148,3 +148,5 @@ module.exports = (db: Database) => {
 
   return app;
 };
+
+export default appRouter;

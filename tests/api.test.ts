@@ -2,14 +2,15 @@
 import request from 'supertest';
 import assert from 'assert';
 import sqlite3lib from 'sqlite3';
+import faker from 'faker';
+import appLib from '../src/app';
+import buildSchemas from '../src/schemas';
 
 const sqlite3 = sqlite3lib.verbose();
-const faker = require('faker');
 
 const db = new sqlite3.Database(':memory:');
 
-const app = require('../src/app')(db);
-const buildSchemas = require('../src/schemas');
+const app = appLib(db);
 
 type Ride = {
   rideID: number;

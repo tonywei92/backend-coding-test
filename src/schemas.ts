@@ -1,6 +1,6 @@
 import { Database } from 'sqlite3';
 
-module.exports = (db: Database) => {
+const buildSchema = (db: Database): Database => {
   const createRideTableSchema = `
         CREATE TABLE Rides
         (
@@ -20,3 +20,5 @@ module.exports = (db: Database) => {
 
   return db;
 };
+
+export default buildSchema;
