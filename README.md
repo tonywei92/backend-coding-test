@@ -27,12 +27,12 @@ $ npm start
 
 ## Endpoints:
 
-| Method | Endpoint   | Summary                     |
-| ------ | ---------- | --------------------------- |
-| GET    | /health    | Check server health         |
-| POST   | /rides     | Create a ride record        |
-| GET    | /rides     | Get list of rides record    |
-| GET    | /rides/:id | Get ride record based on ID |
+| Method | Endpoint      | Summary                                     |
+| ------ | ------------- | ------------------------------------------- |
+| GET    | /health       | Check server health                         |
+| POST   | /rides        | Create a ride record                        |
+| GET    | /rides?page=1 | Get list of rides record, default page is 1 |
+| GET    | /rides/:id    | Get ride record based on ID                 |
 
 ## Documentation
 
