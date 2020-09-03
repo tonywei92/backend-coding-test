@@ -76,7 +76,7 @@ module.exports = (db) => {
     db.run(
       'INSERT INTO Rides(startLat, startLong, endLat, endLong, riderName, driverName, driverVehicle) VALUES (?, ?, ?, ?, ?, ?, ?)',
       values,
-      function dbcb(err) {
+      function dbCb(err) {
         if (err) {
           return res.send({
             error_code: 'SERVER_ERROR',
@@ -87,7 +87,7 @@ module.exports = (db) => {
         db.all(
           'SELECT * FROM Rides WHERE rideID = ?',
           this.lastID,
-          function dbcball(error, rows) {
+          function dbCbAll(error, rows) {
             if (error) {
               return res.send({
                 error_code: 'SERVER_ERROR',
@@ -103,7 +103,7 @@ module.exports = (db) => {
   });
 
   app.get('/rides', (req, res) => {
-    db.all('SELECT * FROM Rides', function dbcb(err, rows) {
+    db.all('SELECT * FROM Rides', function dbCb(err, rows) {
       if (err) {
         return res.send({
           error_code: 'SERVER_ERROR',
@@ -123,7 +123,7 @@ module.exports = (db) => {
   });
 
   app.get('/rides/:id', (req, res) => {
-    db.all(`SELECT * FROM Rides WHERE rideID='${req.params.id}'`, function dbcb(
+    db.all(`SELECT * FROM Rides WHERE rideID='${req.params.id}'`, function dbCb(
       err,
       rows
     ) {
