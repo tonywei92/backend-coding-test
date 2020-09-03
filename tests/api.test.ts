@@ -1,7 +1,9 @@
 /* eslint-disable no-param-reassign */
-const request = require('supertest');
-const assert = require('assert');
-const sqlite3 = require('sqlite3').verbose();
+import request from 'supertest';
+import assert from 'assert';
+import sqlite3lib from 'sqlite3';
+
+const sqlite3 = sqlite3lib.verbose();
 const faker = require('faker');
 
 const db = new sqlite3.Database(':memory:');
@@ -9,15 +11,23 @@ const db = new sqlite3.Database(':memory:');
 const app = require('../src/app')(db);
 const buildSchemas = require('../src/schemas');
 
+type Ride = {
+  rideID: number;
+  created: string;
+  startLat: number;
+  startLong: number;
+  endLat: number;
+  endLong: number;
+  riderName: string;
+  driverName: string;
+  driverVehicle: string;
+};
+
 describe('API tests', () => {
-  const ridesMock = [];
+  const ridesMock: Ride[] = [];
 
   before((done) => {
-    db.serialize((err) => {
-      if (err) {
-        return done(err);
-      }
-
+    db.serialize(() => {
       buildSchemas(db);
 
       // mock data
@@ -73,7 +83,7 @@ describe('API tests', () => {
         .get('/rides')
         .expect('Content-Type', /json/)
         .expect(function cb(res) {
-          res.body.forEach((ride) => {
+          res.body.forEach((ride: Ride) => {
             ride.rideID = 1;
             ride.created = '2020-01-01 00:00:00';
           });
@@ -97,7 +107,7 @@ describe('API tests', () => {
         .post('/rides')
         .send(ridePostData)
         .expect(function cb(res) {
-          res.body.forEach((ride) => {
+          res.body.forEach((ride: Ride) => {
             ride.rideID = 1;
             ride.created = '2020-01-01 00:00:00';
           });
