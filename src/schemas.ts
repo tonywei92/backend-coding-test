@@ -1,4 +1,6 @@
-module.exports = (db) => {
+import { Database } from 'sqlite3';
+
+module.exports = (db: Database) => {
   const createRideTableSchema = `
         CREATE TABLE Rides
         (
