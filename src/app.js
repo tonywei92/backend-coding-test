@@ -59,7 +59,7 @@ module.exports = (db) => {
     if (typeof driverVehicle !== 'string' || driverVehicle.length < 1) {
       return res.send({
         error_code: 'VALIDATION_ERROR',
-        message: 'Rider name must be a non empty string',
+        message: 'Vehicle name must be a non empty string',
       });
     }
 
