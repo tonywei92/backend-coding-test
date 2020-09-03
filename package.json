@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "mocha tests",
-    "start": "node index.js"
+    "start": "node index.js",
+    "docs": "docsify serve docs"
   },
   "keywords": [
     "Xendit"
@@ -21,7 +22,9 @@
     "sqlite3": "^4.0.6"
   },
   "devDependencies": {
+    "docsify-cli": "^4.4.1",
     "mocha": "^6.1.4",
+    "now": "^20.1.0",
     "supertest": "^4.0.2"
   }
 }
