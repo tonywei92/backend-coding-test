@@ -2,12 +2,12 @@
 
 List of endpoints:
 
-| Method | Endpoint                        | Summary                     |
-| ------ | ------------------------------- | --------------------------- |
-| GET    | [/health](#check-server-health) | Check server health         |
-| POST   | [/rides](#create-a-ride-record) | Create a ride record        |
-| GET    | [/rides](#get-all-rides)        | Get list of rides record    |
-| GET    | [/rides/:id](#get-ride-by-id)   | Get ride record based on ID |
+| Method | Endpoint                        | Summary                                     |
+| ------ | ------------------------------- | ------------------------------------------- |
+| GET    | [/health](#check-server-health) | Check server health                         |
+| POST   | [/rides](#create-a-ride-record) | Create a ride record                        |
+| GET    | [/rides?page=1](#get-all-rides) | Get list of rides record, default page is 1 |
+| GET    | [/rides/:id](#get-ride-by-id)   | Get ride record based on ID                 |
 
 ## Check server health
 
@@ -54,47 +54,61 @@ $ curl -XPOST -H "Content-type: application/json" -d '{
 Response example:
 
 ```json
-[
-  {
-    "rideID": 1,
-    "startLat": 0,
-    "startLong": 0,
-    "endLat": 0,
-    "endLong": 0,
-    "riderName": "John Doe",
-    "driverName": "Tony",
-    "driverVehicle": "Honda X",
-    "created": "2020-09-03 10:07:34"
-  }
-]
+{
+  "status": "success",
+  "message": "",
+  "data": [
+    {
+      "rideID": 1,
+      "startLat": 0,
+      "startLong": 0,
+      "endLat": 0,
+      "endLong": 0,
+      "riderName": "John Doe",
+      "driverName": "Tony",
+      "driverVehicle": "Honda X",
+      "created": "2020-09-03 10:07:34"
+    }
+  ]
+}
 ```
 
 ## Get all rides
 
+Query parameter `page` is optional, default `1`.
+
 ```
-GET /rides
+GET /rides?page=1
 ```
 
 ```sh
-$ curl -XGET 'http://localhost:8010/rides'
+$ curl -XGET 'http://localhost:8010/rides?page=2'
 ```
 
 Response example:
 
 ```json
-[
-  {
-    "rideID": 1,
-    "startLat": 0,
-    "startLong": 0,
-    "endLat": 0,
-    "endLong": 0,
-    "riderName": "John Doe",
-    "driverName": "Tony",
-    "driverVehicle": "Honda X",
-    "created": "2020-09-03 10:07:34"
-  }
-]
+{
+  "status": "success",
+  "message": "",
+  "itemsCount": 100,
+  "lastPage": 10,
+  "page": 2,
+  "data": [
+    {
+      "rideID": 1,
+      "startLat": 0,
+      "startLong": 0,
+      "endLat": 0,
+      "endLong": 0,
+      "riderName": "John Doe",
+      "driverName": "Tony",
+      "driverVehicle": "Honda X",
+      "created": "2020-09-03 10:07:34"
+    },
+    ...
+  ]
+}
 ```
 
 ## Get ride by ID
@@ -110,17 +124,21 @@ $ curl -XGET 'http://localhost:8010/rides/1'
 Response example:
 
 ```json
-[
-  {
-    "rideID": 1,
-    "startLat": 0,
-    "startLong": 0,
-    "endLat": 0,
-    "endLong": 0,
-    "riderName": "John Doe",
-    "driverName": "Tony",
-    "driverVehicle": "Honda X",
-    "created": "2020-09-03 10:07:34"
-  }
-]
+{
+  "status": "success",
+  "message": "",
+  "data": [
+    {
+      "rideID": 1,
+      "startLat": 0,
+      "startLong": 0,
+      "endLat": 0,
+      "endLong": 0,
+      "riderName": "John Doe",
+      "driverName": "Tony",
+      "driverVehicle": "Honda X",
+      "created": "2020-09-03 10:07:34"
+    }
+  ]
+}
 ```

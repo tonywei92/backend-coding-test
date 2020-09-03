@@ -2,14 +2,30 @@
 import request from 'supertest';
 import assert from 'assert';
 import sqlite3lib from 'sqlite3';
+import faker from 'faker';
+import appLib from '../src/app';
+import buildSchemas from '../src/schemas';
+import {
+  ResponseShape,
+  createResponse,
+} from '../src/middlewares/createResponse';
 
 const sqlite3 = sqlite3lib.verbose();
-const faker = require('faker');
 
 const db = new sqlite3.Database(':memory:');
 
-const app = require('../src/app')(db);
-const buildSchemas = require('../src/schemas');
+const dbError = {
+  run: (a: string, b: any[], cb: (err: Error) => void) => {
+    cb(new Error('error'));
+  },
+  all: (a: string, cb: (err: Error) => void) => {
+    cb(new Error('error'));
+  },
+};
+
+const app = appLib(db);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const appError = appLib(dbError as any);
 
 type Ride = {
   rideID: number;
@@ -24,7 +40,11 @@ type Ride = {
 };
 
 describe('API tests', () => {
-  const ridesMock: Ride[] = [];
+  const ridesMock: ResponseShape = {
+    status: 'success',
+    data: [],
+    message: '',
+  };
 
   before((done) => {
     db.serialize(() => {
@@ -43,7 +63,7 @@ describe('API tests', () => {
           driverName: faker.name.findName(),
           driverVehicle: faker.random.word(),
         };
-        ridesMock.push(ride);
+        ridesMock.data.push(ride);
         db.run(
           `INSERT INTO Rides
             (
@@ -78,17 +98,84 @@ describe('API tests', () => {
   });
 
   describe('GET /rides', () => {
-    it('should return 100 records of mocked ride', (done) => {
+    it('should return first 10 ride records (page 1)', (done) => {
+      const { data, message, status } = ridesMock;
+      const response: ResponseShape = {
+        data: data.slice(0, 10),
+        message,
+        status,
+        itemsCount: 100,
+        lastPage: 10,
+        page: 1,
+      };
       request(app)
         .get('/rides')
         .expect('Content-Type', /json/)
         .expect(function cb(res) {
-          res.body.forEach((ride: Ride) => {
+          res.body.data.forEach((ride: Ride) => {
             ride.rideID = 1;
             ride.created = '2020-01-01 00:00:00';
           });
         })
-        .expect(200, ridesMock, done);
+        .expect(200, response, done);
+    });
+
+    it('should return 10 ride records on page 5', (done) => {
+      const page = 5;
+      const { data, message, status } = ridesMock;
+      const response: ResponseShape = {
+        data: data.slice((page - 1) * 10, (page - 1) * 10 + 10),
+        message,
+        status,
+        itemsCount: 100,
+        lastPage: 10,
+        page,
+      };
+      request(app)
+        .get(`/rides/?page=${page}`)
+        .expect('Content-Type', /json/)
+        .expect(function cb(res) {
+          res.body.data.forEach((ride: Ride) => {
+            ride.rideID = 1;
+            ride.created = '2020-01-01 00:00:00';
+          });
+        })
+        .expect(200, response, done);
+    });
+
+    it('should return empty ride records on page 999999 (no records at this page)', (done) => {
+      const page = 999999;
+      const { message, status } = ridesMock;
+      const response: ResponseShape = {
+        data: [],
+        message,
+        status,
+        itemsCount: 100,
+        lastPage: 10,
+        page,
+      };
+      request(app)
+        .get(`/rides/?page=${page}`)
+        .expect('Content-Type', /json/)
+        .expect(function cb(res) {
+          res.body.data.forEach((ride: Ride) => {
+            ride.rideID = 1;
+            ride.created = '2020-01-01 00:00:00';
+          });
+        })
+        .expect(200, response, done);
+    });
+
+    it('should return error 500 on db error', (done) => {
+      request(appError).get('/rides').expect('Content-Type', /json/).expect(
+        500,
+        {
+          message: 'error',
+          status: 'error',
+          data: null,
+        },
+        done
+      );
     });
   });
 
@@ -107,26 +194,30 @@ describe('API tests', () => {
         .post('/rides')
         .send(ridePostData)
         .expect(function cb(res) {
-          res.body.forEach((ride: Ride) => {
+          res.body.data.forEach((ride: Ride) => {
             ride.rideID = 1;
             ride.created = '2020-01-01 00:00:00';
           });
         })
         .expect(
-          200,
-          [
-            {
-              rideID: 1,
-              created: '2020-01-01 00:00:00',
-              startLat: 0,
-              startLong: 0,
-              endLat: 0,
-              endLong: 0,
-              riderName: 'John Doe',
-              driverName: 'Tony',
-              driverVehicle: 'Honda X',
-            },
-          ],
+          201,
+          {
+            status: 'success',
+            message: '',
+            data: [
+              {
+                rideID: 1,
+                created: '2020-01-01 00:00:00',
+                startLat: 0,
+                startLong: 0,
+                endLat: 0,
+                endLong: 0,
+                riderName: 'John Doe',
+                driverName: 'Tony',
+                driverVehicle: 'Honda X',
+              },
+            ],
+          },
           done
         );
     });
@@ -140,7 +231,7 @@ describe('API tests', () => {
       });
     });
 
-    it('should return VALIDATION_ERROR when post data startLatitude < -90 (ex. -100)', (done) => {
+    it('should return validation error when post data startLatitude < -90 (ex. -100)', (done) => {
       const ridePostData = {
         start_lat: -100,
         start_long: 0,
@@ -151,17 +242,17 @@ describe('API tests', () => {
         driver_vehicle: 'Honda X',
       };
       request(app).post('/rides').send(ridePostData).expect(
-        200,
+        400,
         {
-          error_code: 'VALIDATION_ERROR',
-          message:
-            'Start latitude and longitude must be between -90 - 90 and -180 to 180 degrees respectively',
+          message: '"start_lat" must be greater than or equal to -90',
+          status: 'error',
+          data: null,
         },
         done
       );
     });
 
-    it('should return VALIDATION_ERROR when post empty rider name', (done) => {
+    it('should return validation error when post empty rider name', (done) => {
       const ridePostData = {
         start_lat: 0,
         start_long: 0,
@@ -172,16 +263,17 @@ describe('API tests', () => {
         driver_vehicle: 'Honda X',
       };
       request(app).post('/rides').send(ridePostData).expect(
-        200,
+        400,
         {
-          error_code: 'VALIDATION_ERROR',
-          message: 'Rider name must be a non empty string',
+          message: '"rider_name" is not allowed to be empty',
+          status: 'error',
+          data: null,
         },
         done
       );
     });
 
-    it('should return VALIDATION_ERROR when post empty driver name', (done) => {
+    it('should return validation error when post empty driver name', (done) => {
       const ridePostData = {
         start_lat: 0,
         start_long: 0,
@@ -192,16 +284,17 @@ describe('API tests', () => {
         driver_vehicle: 'Honda X',
       };
       request(app).post('/rides').send(ridePostData).expect(
-        200,
+        400,
         {
-          error_code: 'VALIDATION_ERROR',
-          message: 'Rider name must be a non empty string',
+          message: '"driver_name" is not allowed to be empty',
+          status: 'error',
+          data: null,
         },
         done
       );
     });
 
-    it('should return VALIDATION_ERROR when post empty vehicle', (done) => {
+    it('should return validation error when post empty vehicle', (done) => {
       const ridePostData = {
         start_lat: 0,
         start_long: 0,
@@ -212,13 +305,39 @@ describe('API tests', () => {
         driver_vehicle: '',
       };
       request(app).post('/rides').send(ridePostData).expect(
-        200,
+        400,
         {
-          error_code: 'VALIDATION_ERROR',
-          message: 'Vehicle name must be a non empty string',
+          message: '"driver_vehicle" is not allowed to be empty',
+          status: 'error',
+          data: null,
         },
         done
       );
+    });
+
+    it('should return error 500 on db error', (done) => {
+      const ridePostData = {
+        start_lat: 0,
+        start_long: 0,
+        end_lat: 0,
+        end_long: 0,
+        rider_name: 'John Doe',
+        driver_name: 'Tony',
+        driver_vehicle: 'Honda X',
+      };
+      request(appError)
+        .post('/rides')
+        .send(ridePostData)
+        .expect('Content-Type', /json/)
+        .expect(
+          500,
+          {
+            message: 'error',
+            status: 'error',
+            data: null,
+          },
+          done
+        );
     });
   });
 
@@ -232,7 +351,7 @@ describe('API tests', () => {
         request(app)
           .get(`/rides/${rideID}`)
           .expect('Content-Type', /json/)
-          .expect(200, rows, done);
+          .expect(200, createResponse(rows), done);
       });
     });
 
@@ -242,10 +361,27 @@ describe('API tests', () => {
         .get(`/rides/${rideID}`)
         .expect('Content-Type', /json/)
         .expect(
-          200,
+          404,
           {
-            error_code: 'RIDES_NOT_FOUND_ERROR',
             message: 'Could not find any rides',
+            status: 'error',
+            data: null,
+          },
+          done
+        );
+    });
+
+    it('should return error 500 on db error', (done) => {
+      const rideID = 1234;
+      request(appError)
+        .get(`/rides/${rideID}`)
+        .expect('Content-Type', /json/)
+        .expect(
+          500,
+          {
+            message: 'error',
+            status: 'error',
+            data: null,
           },
           done
         );
