@@ -61,13 +61,32 @@ const appRouter = (db: Database): Express => {
   );
 
   app.get('/rides', (req, res: ResponseObj, next: NextFunction) => {
-    db.all('SELECT * FROM Rides', function dbCb(err, rows) {
-      if (err) {
-        return next(new HttpException(err.message));
-      }
+    const perPage = 10;
 
-      res.json(res.createResponse(rows));
-    });
+    const { page = 1 } = req.query;
+    db.all(
+      `SELECT * FROM Rides LIMIT ${perPage} OFFSET ${
+        perPage * (Number(page) - 1)
+      }`,
+      function dbCb(err, rows) {
+        if (err) {
+          return next(new HttpException(err.message));
+        }
+        db.all('SELECT count(*) as total FROM Rides', function dbCb2(
+          err2,
+          rows2
+        ) {
+          if (err) {
+            return next(new HttpException(err2.message));
+          }
+          const response = res.createResponse(rows);
+          response.page = Number(page);
+          response.itemsCount = Number(rows2[0].total);
+          response.lastPage = Math.ceil(rows2[0].total / 10);
+          res.json(response);
+        });
+      }
+    );
   });
 
   app.get('/rides/:id', (req, res: ResponseObj, next: NextFunction) => {
@@ -76,7 +95,7 @@ const appRouter = (db: Database): Express => {
       rows
     ) {
       if (err) {
-        return next(new HttpException('Unknown error', 500));
+        return next(new HttpException(err.message));
       }
 
       if (rows.length === 0) {
