@@ -1,0 +1,29 @@
+config:
+  target: 'http://localhost:8800'
+  phases:
+    - duration: 30
+      arrivalRate: 100
+      name: Sustained load
+  processor: './loadtest.processor.js'
+scenarios:
+  - name: 'Post ride data'
+    flow:
+      - function: 'generateRandomData'
+      - post:
+          url: '/rides'
+          json:
+            start_lat: '{{startLat}}}'
+            start_long: '{{startLong}}'
+            end_lat: '{{endLat}}'
+            end_long: '{{endLong}}'
+            rider_name: '{{riderName}}'
+            driver_name: '{{driverName}}'
+            driver_vehicle: '{{driverVehicle}}'
+  - name: 'get ride data'
+    flow:
+      - get:
+          url: '/rides/10'
+  - name: 'get all rides data'
+    flow:
+      - get:
+          url: '/rides'
