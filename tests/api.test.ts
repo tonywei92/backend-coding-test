@@ -5,6 +5,7 @@ import sqlite3lib from 'sqlite3';
 import faker from 'faker';
 import appLib from '../src/app';
 import buildSchemas from '../src/schemas';
+import { Ride } from '../src/repositories/Ride';
 import {
   ResponseShape,
   createResponse,
@@ -18,26 +19,19 @@ const dbError = {
   run: (a: string, b: any[], cb: (err: Error) => void) => {
     cb(new Error('error'));
   },
-  all: (a: string, cb: (err: Error) => void) => {
-    cb(new Error('error'));
+  all: (a: string, cb1: any, cb2: any) => {
+    if (typeof cb1 === 'function') {
+      cb1(new Error('error'));
+    }
+    if (typeof cb2 === 'function') {
+      cb2(new Error('error'));
+    }
   },
 };
 
 const app = appLib(db);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const appError = appLib(dbError as any);
-
-type Ride = {
-  rideID: number;
-  created: string;
-  startLat: number;
-  startLong: number;
-  endLat: number;
-  endLong: number;
-  riderName: string;
-  driverName: string;
-  driverVehicle: string;
-};
 
 describe('API tests', () => {
   const ridesMock: ResponseShape = {
