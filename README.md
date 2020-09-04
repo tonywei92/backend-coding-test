@@ -13,7 +13,7 @@
 
 ## Installation
 
-Ensure `node (>8.6 and <= 10)` and `npm` are installed
+Ensure `node (>8.6 and <= 10)` and `npm` are installed, node `v10.22.0 lts` is highly recommended.
 
 ```sh
 $ npm install

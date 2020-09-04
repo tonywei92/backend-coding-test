@@ -1,6 +1,6 @@
 # Quickstart
 
-Ensure `node (>8.6 and <= 10)` and `npm` are installed, `v10.22.0 lts` is highly recommended.
+Ensure `node (>8.6 and <= 10)` and `npm` are installed, node `v10.22.0 lts` is highly recommended.
 
 ## installation
 
