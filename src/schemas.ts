@@ -17,7 +17,6 @@ const buildSchema = (db: Database): Database => {
     `;
 
   db.run(createRideTableSchema);
-  console.log('asdsdsa');
   return db;
 };
 

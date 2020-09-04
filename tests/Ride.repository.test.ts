@@ -51,28 +51,54 @@ describe('Ride repository test', () => {
     });
   });
 
-  it('should insert to Rides table', async () => {
-    const ride: Ride = {
-      driverName: 'Tony',
-      driverVehicle: 'Honda',
-      riderName: 'John Doe',
-      startLat: 50,
-      startLong: -50,
-      endLat: 50,
-      endLong: -50,
-    };
-    const insertId = await rideRepository.insert(ride);
-    const result = await rideRepository.findById(insertId);
-    assert(result.length === 1);
+  describe('test basic functionality', () => {
+    it('should insert to Rides table', async () => {
+      const ride: Ride = {
+        driverName: 'Tony',
+        driverVehicle: 'Honda',
+        riderName: 'John Doe',
+        startLat: 50,
+        startLong: -50,
+        endLat: 50,
+        endLong: -50,
+      };
+      const insertId = await rideRepository.insert(ride);
+      const result = await rideRepository.findById(insertId);
+      assert(result.length === 1);
+    });
+
+    it('should query all records', async () => {
+      const results = await rideRepository.all();
+      assert(results.rows.length === 16 && results.count === 16);
+    });
+
+    it('should query all records with pagination', async () => {
+      const results = await rideRepository.all(2, 10);
+      assert(results.rows.length === 6 && results.count === 16);
+    });
   });
 
-  it('should query all records', async () => {
-    const results = await rideRepository.all();
-    assert(results.rows.length === 16 && results.count === 16);
-  });
+  describe('SQL injection test', () => {
+    it('should return empty array when try sql injection', async () => {
+      const result = await rideRepository.findById(
+        ('1 OR 1=1' as unknown) as number
+      );
+      assert(result.length === 0);
+    });
 
-  it('should query all records with pagination', async () => {
-    const results = await rideRepository.all(2, 10);
-    assert(results.rows.length === 6 && results.count === 16);
+    it('should fail to delete table using sql injection', async () => {
+      const ride: Ride = {
+        driverName: 'Tony',
+        driverVehicle: 'Honda',
+        startLat: 50,
+        startLong: -50,
+        endLat: 50,
+        endLong: -50,
+        riderName: "'); DELETE FROM Rides; --", // sql injection
+      };
+      await rideRepository.insert(ride);
+      const result = await rideRepository.all();
+      assert(result.rows.length > 0);
+    });
   });
 });

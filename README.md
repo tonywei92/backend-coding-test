@@ -13,7 +13,7 @@
 
 ## Installation
 
-Ensure `node (>8.6 and <= 10)` and `npm` are installed
+Ensure `node (>8.6 and <= 10)` and `npm` are installed, node `v10.22.0 lts` is highly recommended.
 
 ```sh
 $ npm install
@@ -42,4 +42,16 @@ Or you can start the documentation server:
 
 ```sh
 $ npm run docs
+```
+
+## Testing
+
+```sh
+$ npm test
+```
+
+## Load testing
+
+```sh
+$ npm run test:load
 ```
