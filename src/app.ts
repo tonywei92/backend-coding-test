@@ -9,8 +9,11 @@ import createResponseMiddleware, {
 } from './middlewares/createResponse';
 import RidesInputValidator from './middlewares/validators/ridesInput';
 import HttpException from './exceptions/HttpException';
+import RideRepositoryBuilder from './repositories/Ride';
 
 const appRouter = (db: Database): Express => {
+  const RideRepository = RideRepositoryBuilder(db);
+
   const app = express();
   app.use(morgan('combined', { stream: loggerStream }));
   app.use(createResponseMiddleware);
@@ -20,7 +23,7 @@ const appRouter = (db: Database): Express => {
   app.post(
     '/rides',
     [jsonParser, RidesInputValidator],
-    (req: Request, res: ResponseObj, next: NextFunction) => {
+    async (req: Request, res: ResponseObj, next: NextFunction) => {
       const {
         start_lat: startLat,
         start_long: startLong,
@@ -30,7 +33,7 @@ const appRouter = (db: Database): Express => {
         driver_name: driverName,
         driver_vehicle: driverVehicle,
       } = req.body;
-      const values = [
+      const values = {
         startLat,
         startLong,
         endLat,
@@ -38,75 +41,45 @@ const appRouter = (db: Database): Express => {
         riderName,
         driverName,
         driverVehicle,
-      ];
-
-      db.run(
-        'INSERT INTO Rides(startLat, startLong, endLat, endLong, riderName, driverName, driverVehicle) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        values,
-        function dbCb(err) {
-          if (err) {
-            return next(new HttpException(err.message));
-          }
-
-          db.all(
-            'SELECT * FROM Rides WHERE rideID = ?',
-            this.lastID,
-            function dbCbAll(error, rows) {
-              if (error) {
-                return next(new HttpException(err.message));
-              }
-              res.status(201).json(res.createResponse(rows));
-            }
-          );
-        }
-      );
+      };
+      try {
+        const lastId = await RideRepository.insert(values);
+        const rows = await RideRepository.findById(lastId);
+        res.status(201).json(res.createResponse(rows));
+      } catch (err) {
+        next(new HttpException(err.message));
+      }
     }
   );
 
-  app.get('/rides', (req, res: ResponseObj, next: NextFunction) => {
+  app.get('/rides', async (req, res: ResponseObj, next: NextFunction) => {
     const perPage = 10;
 
     const { page = 1 } = req.query;
-    db.all(
-      `SELECT * FROM Rides LIMIT ${perPage} OFFSET ${
-        perPage * (Number(page) - 1)
-      }`,
-      function dbCb(err, rows) {
-        if (err) {
-          return next(new HttpException(err.message));
-        }
-        db.all('SELECT count(*) as total FROM Rides', function dbCb2(
-          err2,
-          rows2
-        ) {
-          if (err) {
-            return next(new HttpException(err2.message));
-          }
-          const response = res.createResponse(rows);
-          response.page = Number(page);
-          response.itemsCount = Number(rows2[0].total);
-          response.lastPage = Math.ceil(rows2[0].total / 10);
-          res.json(response);
-        });
-      }
-    );
+
+    try {
+      const allData = await RideRepository.all(Number(page), perPage);
+      const response = res.createResponse(allData.rows);
+      response.page = Number(page);
+      response.itemsCount = Number(allData.count);
+      response.lastPage = Math.ceil(Number(allData.count) / 10);
+      res.json(response);
+    } catch (err) {
+      return next(new HttpException(err.message));
+    }
   });
 
-  app.get('/rides/:id', (req, res: ResponseObj, next: NextFunction) => {
-    db.all(`SELECT * FROM Rides WHERE rideID='${req.params.id}'`, function dbCb(
-      err,
-      rows
-    ) {
-      if (err) {
-        return next(new HttpException(err.message));
-      }
-
-      if (rows.length === 0) {
+  app.get('/rides/:id', async (req, res: ResponseObj, next: NextFunction) => {
+    const { id } = req.params;
+    try {
+      const result = await RideRepository.findById(Number(id));
+      if (result.length === 0) {
         return next(new HttpException('Could not find any rides', 404));
       }
-
-      res.json(res.createResponse(rows));
-    });
+      res.json(res.createResponse(result));
+    } catch (err) {
+      next(new HttpException(err.message));
+    }
   });
 
   app.use(errorHandlerMiddleware);
