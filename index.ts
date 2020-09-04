@@ -14,6 +14,7 @@ db.serialize(() => {
   const app = appRouter(db);
 
   app.listen(port, () =>
+    // eslint-disable-next-line no-console
     console.log(`App started and listening on port ${port}`)
   );
 });
