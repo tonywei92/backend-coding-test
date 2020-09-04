@@ -43,3 +43,15 @@ Or you can start the documentation server:
 ```sh
 $ npm run docs
 ```
+
+## Testing
+
+```sh
+$ npm test
+```
+
+## Load testing
+
+```sh
+$ npm run test:load
+```

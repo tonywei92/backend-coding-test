@@ -1,13 +1,29 @@
 # Quickstart
-Ensure `node (>8.6 and <= 10)` and `npm` are installed, `v8.9.0 lts` is recommended.
+
+Ensure `node (>8.6 and <= 10)` and `npm` are installed, `v10.22.0 lts` is highly recommended.
 
 ## installation
+
 Run installation
+
 ```sh
 $ npm install
 ```
 
 Run server
+
 ```sh
 $ npm start
+```
+
+## Testing
+
+```sh
+$ npm test
+```
+
+## Load testing
+
+```sh
+$ npm run test:load
 ```
